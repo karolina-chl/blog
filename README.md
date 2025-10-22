@@ -24,7 +24,7 @@ You can adjust author id, title and body to you liking.
 
 ## 3. Edit my post
 To edit a post run the following command: <br>
-`uvx --from httpie http PUT :5000/posts/1 author_id:=1 title="First post (edited)" body="Hello again"` <br>
+`uvx --from httpie http PUT :5000/posts/1 author_id:=1 title="First post (edited)" body="Hello again (edited)"` <br>
 You can only edit your own posts. <br>
 
 ## 4. Delete my post 
