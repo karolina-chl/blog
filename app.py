@@ -1,10 +1,17 @@
+""" Backend for a blog platform demo.
+Implements 5 user stories: create, edit, browse mine posts, delete post, and browse all posts.
+"""
+
 #imports
 from flask import Flask, request, jsonify, abort
 from werkzeug.exceptions import HTTPException
 from sqlalchemy import create_engine, Integer, Text, select, desc
 from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column
 
-# --- SQLite Database setup ---------------------------
+#local imports
+from utils import post_to_dict, require_fields
+
+# --- SQLite Database ---------------------------
 
 DATABASE_URL = "sqlite:///blog.db"  
 engine = create_engine(DATABASE_URL)
@@ -28,23 +35,11 @@ Base.metadata.create_all(engine)
 # --- App ------------------------------------------------------
 app = Flask(__name__)
 
-
 # --- HTTP Error  ---------------------------------------------------
 
 @app.errorhandler(HTTPException)
 def on_http_error(http_error):
     return jsonify({"error": http_error.name, "message": http_error.description}), http_error.code
-
-# --- Utils ------------------------------------------------------------
-
-def post_to_dict(post):
-    return {"id": post.id, "author_id": post.author_id, "title": post.title, "body": post.body}
-
-
-def require_fields(data: dict, *fields: str):
-    missing = [f for f in fields if f not in data]
-    if missing:
-        abort(400, description=f"Missing fields: {', '.join(missing)}")
 
 
 # --- User Stories -----------------------------------------------------------
@@ -52,6 +47,7 @@ def require_fields(data: dict, *fields: str):
 # Create a post
 @app.post("/posts")
 def create_post():
+    """Create a new blog post."""
     data = request.get_json(force=True) or {}
     require_fields(data, "author_id", "title", "body")
 
@@ -72,6 +68,7 @@ def create_post():
 # Edit my post
 @app.put("/posts/<int:post_id>")
 def edit_post(post_id):
+    """Edit an existing blog post."""
     data = request.get_json(force=True) or {}
     require_fields(data, "author_id", "title", "body")
 
@@ -93,6 +90,7 @@ def edit_post(post_id):
 # Browse my posts
 @app.get("/posts/mine/<int:author_id>")
 def list_my_posts(author_id):
+    """List posts for a single author"""
     with SessionLocal() as db:
         stmt = select(Post).where(Post.author_id == author_id).order_by(desc(Post.id))
         posts = db.execute(stmt).scalars().all()
@@ -102,6 +100,7 @@ def list_my_posts(author_id):
 # Delete one post
 @app.delete("/posts/<int:post_id>")
 def delete_post(post_id):
+    """Delete a post (only owner can delete)"""
     data = request.get_json(silent=True) or {}
     if "author_id" not in data:
         abort(400, description="author_id is required to delete a post.")
@@ -125,6 +124,7 @@ def delete_post(post_id):
 # See all posts 
 @app.get("/posts")
 def list_all_posts():
+    """List all posts"""
     with SessionLocal() as db:
         stmt = select(Post).order_by(desc(Post.id))
         posts = db.execute(stmt).scalars().all()
