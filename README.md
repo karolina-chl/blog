@@ -11,7 +11,7 @@ Follow this demo to test the code.
 ## 0. Set up your uv venv
 To set up your environment with uv run: 
 `uv venv` and then 
-`uv pip install -r requirements`
+`uv pip install -r requirements.txt`
 
 ## 1. Start
 In your terminal run: 
