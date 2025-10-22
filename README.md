@@ -9,33 +9,33 @@ This blogging platform implementation allows for the following user stories:
 # Demo
 Follow this demo to test the code. 
 ## 0. Set up your uv venv
-To set up your environment with uv run: 
-`uv venv` and then 
+To set up your environment with uv run: <br>
+`uv venv` and then <br>
 `uv pip install -r requirements.txt`
 
 ## 1. Start
-In your terminal run: 
+In your terminal run: <br>
 `uv run python app.py`
 
 ## 2. Create a post
-To create a post run the following command: 
-`uvx --from httpie http POST :5000/posts author_id:=1 title="First post"  body="Hello, world"`
+To create a post run the following command: <br>
+`uvx --from httpie http POST :5000/posts author_id:=1 title="First post"  body="Hello, world"` <br>
 You can adjust author id, title and body to you liking. 
 
 ## 3. Edit my post
-To edit a post run the following command: 
-`uvx --from httpie http PUT :5000/posts/1 author_id:=1 title="First post (edited)" body="Hello again"`
-You can only edit your own posts. 
+To edit a post run the following command: <br>
+`uvx --from httpie http PUT :5000/posts/1 author_id:=1 title="First post (edited)" body="Hello again"` <br>
+You can only edit your own posts. <br>
 
 ## 4. Delete my post 
-To delete a post run the following command:
-`uvx --from httpie http -v DELETE :5000/posts/1 author_id:=1`
+To delete a post run the following command: <br>
+`uvx --from httpie http -v DELETE :5000/posts/1 author_id:=1` <br>
 
 ## 5. See all posts 
-To see all posts run the following command:
-`uvx --from httpie http :5000/posts/mine/1`
+To see all posts run the following command: <br>
+`uvx --from httpie http :5000/posts`
 
 ## 6. See my posts 
-To see my posts run the following command:
-`uvx --from httpie http :5000/posts`
+To see my posts run the following command: <br>
+`uvx --from httpie http :5000/posts/mine/1`
 
