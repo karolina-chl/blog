@@ -1,15 +1,12 @@
-# app.py
-from typing import Generator
-
+#imports
 from flask import Flask, request, jsonify, abort
 from werkzeug.exceptions import HTTPException
 from sqlalchemy import create_engine, Integer, Text, select, desc
-from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column, Session
+from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column
 
 # --- SQLite Database setup ---------------------------
 
-DATABASE_URL = "sqlite:///blog.db"  # file-based DB in project folder
-
+DATABASE_URL = "sqlite:///blog.db"  
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 
@@ -28,44 +25,31 @@ class Post(Base):
 
 Base.metadata.create_all(engine)
 
-# --- Flask app ---------------------------------------------------------------
+# --- App ------------------------------------------------------
 app = Flask(__name__)
 
 
-def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-# --- Error handling (JSON) ---------------------------------------------------
+# --- HTTP Error  ---------------------------------------------------
 
 @app.errorhandler(HTTPException)
-def on_http_error(e: HTTPException):
-    return jsonify({"error": e.name, "message": e.description}), e.code
+def on_http_error(http_error):
+    return jsonify({"error": http_error.name, "message": http_error.description}), http_error.code
 
+# --- Utils ------------------------------------------------------------
 
-@app.errorhandler(ValueError)
-def on_value_error(e: ValueError):
-    return jsonify({"error": "Bad Request", "message": str(e)}), 400
-
-
-# --- Helpers -----------------------------------------------------------------
-def post_to_dict(p: Post) -> dict:
-    return {"id": p.id, "author_id": p.author_id, "title": p.title, "body": p.body}
+def post_to_dict(post):
+    return {"id": post.id, "author_id": post.author_id, "title": post.title, "body": post.body}
 
 
 def require_fields(data: dict, *fields: str):
     missing = [f for f in fields if f not in data]
     if missing:
-        raise ValueError(f"Missing fields: {', '.join(missing)}")
+        abort(400, description=f"Missing fields: {', '.join(missing)}")
 
 
 # --- User Stories -----------------------------------------------------------
 
-# 1) Create
+# Create a post
 @app.post("/posts")
 def create_post():
     data = request.get_json(force=True) or {}
@@ -78,16 +62,16 @@ def create_post():
             body=str(data["body"]).strip(),
         )
         if not post.title:
-            raise ValueError("Title cannot be empty.")
+            abort(400, description="Title cannot be empty.")
         db.add(post)
         db.commit()
         db.refresh(post)
         return jsonify(post_to_dict(post)), 201
 
 
-# 2) Edit
+# Edit my post
 @app.put("/posts/<int:post_id>")
-def edit_post(post_id: int):
+def edit_post(post_id):
     data = request.get_json(force=True) or {}
     require_fields(data, "author_id", "title", "body")
 
@@ -101,29 +85,31 @@ def edit_post(post_id: int):
         post.title = str(data["title"]).strip()
         post.body = str(data["body"]).strip()
         if not post.title:
-            raise ValueError("Title cannot be empty.")
+            abort(400, description="Title cannot be empty.")
         db.commit()
-        db.refresh(post)
         return jsonify(post_to_dict(post))
 
 
-# 3) Browse my posts
+# Browse my posts
 @app.get("/posts/mine/<int:author_id>")
-def list_my_posts(author_id: int):
+def list_my_posts(author_id):
     with SessionLocal() as db:
         stmt = select(Post).where(Post.author_id == author_id).order_by(desc(Post.id))
         posts = db.execute(stmt).scalars().all()
         return jsonify([post_to_dict(p) for p in posts])
 
 
-# 4) Delete
+# Delete one post
 @app.delete("/posts/<int:post_id>")
-def delete_post(post_id: int):
+def delete_post(post_id):
     data = request.get_json(silent=True) or {}
-    author_id = int(data.get("author_id")) if "author_id" in data else None
-    if author_id is None:
-        raise ValueError("author_id is required to delete a post.")
-
+    if "author_id" not in data:
+        abort(400, description="author_id is required to delete a post.")
+    try: 
+        author_id = int(data["author_id"])
+    except (TypeError, ValueError):
+        abort(400, description="author_id must be an integer.")
+        
     with SessionLocal() as db:
         post = db.get(Post, post_id)
         if not post:
@@ -136,7 +122,7 @@ def delete_post(post_id: int):
         return "", 204
 
 
-# 5) See all posts 
+# See all posts 
 @app.get("/posts")
 def list_all_posts():
     with SessionLocal() as db:
