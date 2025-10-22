@@ -15,7 +15,7 @@ To set up your environment with uv run:
 
 ## 1. Start
 In your terminal run: 
-`uv run app.py`
+`uv run python app.py`
 
 ## 2. Create a post
 To create a post run the following command: 
