@@ -33,7 +33,7 @@ To delete a post run the following command:
 
 ## 5. See all posts 
 To see all posts run the following command:
-`uvx --from httpie http :5000/posts`
+`uvx --from httpie http :5000/posts/mine/1`
 
 ## 6. See my posts 
 To see my posts run the following command:
